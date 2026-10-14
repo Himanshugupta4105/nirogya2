@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nirogya AI — Your Personal Health Copilot</title>
+  <meta name="description" content="Nirogya AI transforms your medical records, prescriptions, and lab reports into clear, actionable health insights. Understand your health in plain language.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css?v=2.3">
+  <link rel="stylesheet" href="css/components.css?v=2.3">
+</head>
+<body>
+
+  <!-- ======================================================= -->
+  <!-- HEADER                                                   -->
+  <!-- ======================================================= -->
+  <header class="app-header">
+    <div class="header-inner">
+
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Nirogya AI</span>
+          <span class="brand-tag">Personal Health Copilot</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Language Selector -->
+        <div class="lang-selector-wrap">
+          <span class="lang-icon">🌐</span>
+          <select id="language-selector" class="lang-select" title="Change Language">
+            <option value="en" selected>English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="te">తెలుగు</option>
+            <option value="ta">தமிழ்</option>
+            <option value="bn">বাংলা</option>
+            <option value="mr">मराठी</option>
+          </select>
+        </div>
+
+        <!-- AI Engine Pill Button -->
+        <button class="btn-ai-pill" id="btn-open-ai-settings" title="Configure Live Google Gemini AI or view engine status">
+          <span class="ai-spark">⚡</span>
+          <span id="header-ai-label">AI Engine</span>
+        </button>
+
+        <!-- Patient Selector Pill -->
+        <div class="patient-selector-pill" id="patient-selector-wrap" title="Switch or Register Patient Profile">
+          <div class="patient-avatar" id="patient-avatar-initials">RK</div>
+          <div class="patient-select-info">
+            <select id="patient-select-dropdown" class="patient-select-field" title="Select Patient Profile">
+              <!-- Dynamically populated via App.loadPatients() -->
+            </select>
+            <span class="patient-meta" id="header-patient-sub">52 Y • Male • B+</span>
+          </div>
+          <button type="button" class="btn-new-patient-trigger" id="btn-open-add-patient" title="Register New Patient">
+            + New
+          </button>
+        </div>
+
+        <!-- ABHA Pill -->
+        <div class="abha-pill" id="header-abha-pill" title="Ayushman Bharat Health Account">
+          <span class="abha-dot"></span>
+          <span id="header-abha-text">ABHA Linked</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================= -->
+  <!-- MAIN LAYOUT                                              -->
+  <!-- ======================================================= -->
+  <div class="app-layout">
+
+    <!-- LEFT SIDEBAR NAV -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="view-overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Health Summary</span>
+        </button>
+        <button class="nav-item" data-view="view-timeline">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Health Timeline</span>
+        </button>
+        <button class="nav-item" data-view="view-vitals">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Vitals & Trends</span>
+        </button>
+        <button class="nav-item" data-view="view-medications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v3"/><circle cx="18" cy="18" r="3"/><path d="m22 22-1.5-1.5"/></svg>
+          <span>Medications</span>
+        </button>
+        <button class="nav-item" data-view="view-fhir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>
+          <span>ABDM & FHIR</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="safety-note">
+          <span class="safety-dot"></span>
+          <span>AI guidance only. Always consult your doctor.</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- ====================================================== -->
+      <!-- UPLOAD PANEL (always visible at top)                    -->
+      <!-- ====================================================== -->
+      <section class="upload-section">
+        <div class="upload-top-row">
+          <div class="upload-area" id="file-dropzone">
+            <div class="upload-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="upload-text">
+              <p id="dropzone-prompt">Upload a medical record to analyze</p>
+              <p class="upload-hint" id="dropzone-sub">PDF, PNG, JPG, or TXT — prescriptions, lab reports, discharge summaries</p>
+            </div>
+            <input type="file" id="hidden-file-input" class="hidden-input" accept=".pdf,.png,.jpg,.jpeg,.txt">
+          </div>
+
+          <div class="upload-manual-card" id="btn-open-manual-entry" title="Type test numbers or paste doctor's notes directly">
+            <div class="manual-icon">✍️</div>
+            <div class="manual-text">
+              <h4>Enter Record Manually</h4>
+              <p>Type lab test values or paste prescription text directly</p>
+            </div>
+            <button class="btn-manual-action" type="button">+ Enter</button>
+          </div>
+        </div>
+
+        <!-- Sample Records -->
+        <div class="samples-row">
+          <span class="samples-label">Try a sample:</span>
+          <div class="samples-list">
+            <button class="sample-btn active" data-sample="sample_lab_report">
+              <span>🧪</span> Metabolic Panel
+            </button>
+            <button class="sample-btn" data-sample="sample_prescription">
+              <span>💊</span> Prescription
+            </button>
+            <button class="sample-btn" data-sample="sample_discharge_summary">
+              <span>🏥</span> Discharge Summary
+            </button>
+            <button class="sample-btn" data-sample="sample_thyroid_vitamin">
+              <span>🔬</span> Thyroid & Vitamins
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- VIEW: HEALTH SUMMARY (Overview)                         -->
+      <!-- ====================================================== -->
+      <section id="view-overview" class="view-panel active">
+
+        <!-- Snapshot Metrics -->
+        <div class="metrics-strip">
+          <div class="metric-tile" id="tile-abnormal">
+            <div class="tile-value danger" id="metric-abnormal-count">4</div>
+            <div class="tile-label">Flags Detected</div>
+          </div>
+          <div class="metric-tile">
+            <div class="tile-value success" id="metric-normal-count">2</div>
+            <div class="tile-label">In Normal Range</div>
+          </div>
+          <div class="metric-tile">
+            <div class="tile-value" id="metric-doc-date">Sep 14, 2026</div>
+            <div class="tile-label">Report Date</div>
+          </div>
+          <div class="metric-tile">
+            <div class="tile-value small" id="metric-doc-provider">Metropolis Lab</div>
+            <div class="tile-label">Healthcare Provider</div>
+          </div>
+        </div>
+
+        <!-- AI Narrative Summary -->
+        <div class="summary-card" id="executive-summary-content">
+          <div class="summary-card-header">
+            <div class="summary-card-title">
+              <span class="title-icon">🩺</span>
+              <h2>Your Health Summary</h2>
+            </div>
+            <span class="doc-badge" id="banner-doc-tag">LAB REPORT</span>
+          </div>
+          <p class="narrative-text" id="executive-narrative-text">Loading your health summary…</p>
+          <p class="narrative-regional" id="executive-narrative-regional" style="display:none;"></p>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="overview-grid">
+          <!-- Left: Biomarker Flags + Drug Safety + Nutrition -->
+          <div class="overview-main">
+
+            <!-- Biomarker Trajectory -->
+            <div class="section-header" id="deltas-section-header" style="display:none;">
+              <h3>Biomarker Trend vs. Baseline</h3>
+              <p>Compared to your earlier records</p>
+            </div>
+            <div class="deltas-grid" id="deltas-grid"></div>
+
+            <!-- Abnormal Biomarkers -->
+            <div class="section-header">
+              <h3 data-i18n="abnormal_section_title">Flagged Results — Plain Language</h3>
+              <p>What your numbers mean, explained simply</p>
+            </div>
+            <div class="biomarker-cards" id="abnormal-cards-container">
+              <!-- filled by app.js -->
+            </div>
+
+            <!-- Drug Safety -->
+            <div class="section-header">
+              <h3>Medication Safety Check</h3>
+              <p>Interactions and timing alerts for your current regimen</p>
+            </div>
+            <div class="drug-safety-list" id="interactions-list">
+              <!-- filled by app.js -->
+            </div>
+
+            <!-- Nutrition Plan -->
+            <div class="section-header">
+              <h3 id="nutrition-plan-title">Diet Recommendations</h3>
+              <p>Personalised based on your health conditions</p>
+            </div>
+            <div class="nutrition-banner" id="nutrition-target-banner"></div>
+            <div class="meals-grid" id="meals-timeline"></div>
+            <div class="nutrition-split">
+              <div class="nutrition-box good">
+                <h5>✅ Recommended Foods</h5>
+                <ul id="superfoods-list"></ul>
+              </div>
+              <div class="nutrition-box bad">
+                <h5>❌ Foods to Avoid</h5>
+                <ul id="avoid-list"></ul>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Sidebar: Action Checklist -->
+          <aside class="overview-aside">
+            <div class="checklist-card">
+              <h4 data-i18n="checklist_title">Your Daily Action Plan</h4>
+              <div id="checklist-container">
+                <!-- filled by app.js -->
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- VIEW: HEALTH TIMELINE                                   -->
+      <!-- ====================================================== -->
+      <section id="view-timeline" class="view-panel">
+        <div class="view-header">
+          <h2>Your Health Timeline</h2>
+          <p>A chronological journey of your health records</p>
+        </div>
+
+        <div class="timeline-filters">
+          <button class="filter-chip active" data-filter="all">All Records</button>
+          <button class="filter-chip" data-filter="lab_report">Lab Tests</button>
+          <button class="filter-chip" data-filter="prescription">Prescriptions</button>
+          <button class="filter-chip" data-filter="hospital">Hospital Visits</button>
+        </div>
+
+        <div class="timeline-tree" id="timeline-tree">
+          <!-- filled by timeline.js -->
+        </div>
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- VIEW: VITALS & TRENDS                                   -->
+      <!-- ====================================================== -->
+      <section id="view-vitals" class="view-panel">
+        <div class="view-header">
+          <h2>Vitals & Biomarker Trends</h2>
+          <p>Track how your key health numbers change over time</p>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h4>Blood Sugar (Glucose)</h4>
+              <div class="chart-legend">
+                <span><span class="legend-dot emerald"></span> Fasting</span>
+                <span><span class="legend-dot rose"></span> Post-Meal</span>
+              </div>
+            </div>
+            <div class="chart-area" id="glucose-chart-svg"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h4>Blood Pressure</h4>
+              <div class="chart-legend">
+                <span><span class="legend-dot cyan"></span> Systolic</span>
+                <span><span class="legend-dot blue"></span> Diastolic</span>
+              </div>
+            </div>
+            <div class="chart-area" id="bp-chart-svg"></div>
+          </div>
+
+          <div class="chart-card chart-full">
+            <div class="chart-card-header">
+              <h4>Cholesterol Profile</h4>
+              <div class="chart-legend">
+                <span><span class="legend-dot amber"></span> Total</span>
+                <span><span class="legend-dot rose"></span> LDL (Bad)</span>
+              </div>
+            </div>
+            <div class="chart-area" id="lipid-chart-svg"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- VIEW: MEDICATIONS                                       -->
+      <!-- ====================================================== -->
+      <section id="view-medications" class="view-panel">
+        <div class="view-header">
+          <h2>Your Medication Schedule</h2>
+          <p>Daily pill timetable with food timing and safety notes</p>
+        </div>
+
+        <div class="meds-slots">
+          <div class="slot-card">
+            <div class="slot-time">
+              <span class="slot-emoji">🌅</span>
+              <div>
+                <h4>Morning</h4>
+                <span class="slot-sub">8:00 AM · With Breakfast</span>
+              </div>
+            </div>
+            <div class="slot-meds" id="slot-morning-list"></div>
+          </div>
+
+          <div class="slot-card">
+            <div class="slot-time">
+              <span class="slot-emoji">☀️</span>
+              <div>
+                <h4>Afternoon</h4>
+                <span class="slot-sub">1:30 PM · With Lunch</span>
+              </div>
+            </div>
+            <div class="slot-meds" id="slot-afternoon-list">
+              <p class="no-meds-note">No afternoon medications scheduled.</p>
+            </div>
+          </div>
+
+          <div class="slot-card">
+            <div class="slot-time">
+              <span class="slot-emoji">🌙</span>
+              <div>
+                <h4>Night</h4>
+                <span class="slot-sub">9:00 PM · At Bedtime</span>
+              </div>
+            </div>
+            <div class="slot-meds" id="slot-night-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================== -->
+      <!-- VIEW: ABDM & FHIR                                      -->
+      <!-- ====================================================== -->
+      <section id="view-fhir" class="view-panel">
+        <div class="view-header">
+          <h2>ABDM Health Account & FHIR Data</h2>
+          <p>Your digital health identity under India's Ayushman Bharat Digital Mission</p>
+        </div>
+
+        <div class="abdm-grid">
+          <!-- Digital ABHA Card -->
+          <div class="abha-card-block">
+            <div class="abha-card-top">
+              <span class="abha-gov-label">🇮🇳 Government of India · NHA</span>
+              <span class="badge-verified">✓ ABDM Verified</span>
+            </div>
+
+            <div class="abha-qr-row">
+              <div class="abha-qr">
+                <svg viewBox="0 0 100 100" width="100%" height="100%">
+                  <rect x="0" y="0" width="30" height="30" fill="#000"/>
+                  <rect x="5" y="5" width="20" height="20" fill="#fff"/>
+                  <rect x="10" y="10" width="10" height="10" fill="#000"/>
+                  <rect x="70" y="0" width="30" height="30" fill="#000"/>
+                  <rect x="75" y="5" width="20" height="20" fill="#fff"/>
+                  <rect x="80" y="10" width="10" height="10" fill="#000"/>
+                  <rect x="0" y="70" width="30" height="30" fill="#000"/>
+                  <rect x="5" y="75" width="20" height="20" fill="#fff"/>
+                  <rect x="10" y="80" width="10" height="10" fill="#000"/>
+                  <rect x="40" y="10" width="10" height="20" fill="#000"/>
+                  <rect x="45" y="45" width="20" height="20" fill="#000"/>
+                  <rect x="70" y="70" width="15" height="15" fill="#000"/>
+                </svg>
+              </div>
+              <div class="abha-details">
+                <h3 id="abha-patient-name">Rajesh Kumar Sharma</h3>
+                <div class="abha-number" id="card-abha-number">14-8921-4350-9812</div>
+                <div class="abha-address" id="card-abha-address">rajesh.sharma@abdm</div>
+                <div class="abha-meta">DOB: 12-May-1974 · Male · KYC Verified ✓</div>
+              </div>
+            </div>
+
+            <div class="abha-actions">
+              <button class="btn-outline" onclick="AbdmManager.openConsentSimulator()">🤝 Consent Simulator</button>
+              <button class="btn-outline" id="btn-generate-new-abha">🔄 Generate ABHA</button>
+            </div>
+          </div>
+
+          <!-- FHIR Bundle Viewer -->
+          <div class="fhir-block">
+            <div class="fhir-block-header">
+              <h4>HL7 FHIR R4 Bundle (LOINC / SNOMED CT)</h4>
+              <button class="btn-primary small" onclick="AbdmManager.downloadFhirBundle()">⬇ Download</button>
+            </div>
+            <div class="fhir-code" id="fhir-code-display">// Generating FHIR R4 payload…</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- FLOATING AI COPILOT                                      -->
+  <!-- ======================================================= -->
+  <div class="copilot-fab" id="copilot-fab-btn">
+    <span class="fab-icon">✨</span>
+    <span class="fab-label" data-i18n="copilot_title">Ask AI</span>
+  </div>
+
+  <div class="copilot-drawer" id="copilot-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <div class="drawer-avatar">N</div>
+        <div>
+          <h3>Nirogya Health Copilot</h3>
+          <span>Ask anything about your health records</span>
+        </div>
+      </div>
+      <button class="drawer-close" id="copilot-close-btn">×</button>
+    </div>
+
+    <div class="chat-area" id="copilot-chat-area">
+      <div class="chat-bubble bot">
+        Hello! I'm your <strong>Nirogya AI Health Copilot</strong>. I've analyzed your health records. Ask me anything — in English or Hindi!
+      </div>
+    </div>
+
+    <div class="suggestion-chips">
+      <button class="chip" data-prompt="Explain my high HbA1c in simple terms">Explain my HbA1c</button>
+      <button class="chip" data-prompt="Are my blood pressure medicines safe with metformin?">Drug interactions</button>
+      <button class="chip" data-prompt="Why is my creatinine high?">High creatinine</button>
+      <button class="chip" data-prompt="मेरी रिपोर्ट का हिंदी में सारांश बताएं">Hindi summary</button>
+      <button class="chip" data-prompt="What questions should I ask my doctor?">Doctor questions</button>
+    </div>
+
+    <div class="chat-input-row">
+      <button class="mic-btn" id="copilot-mic-btn" title="Speak your question">🎙</button>
+      <input type="text" id="copilot-input" class="chat-input" placeholder="Ask about your health…" data-i18n="copilot_placeholder">
+      <button class="send-btn" id="copilot-send-btn">Ask</button>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: ABHA CARD                                         -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="abha-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🇮🇳 Your ABHA Health Account</h3>
+        <button class="modal-close" id="close-abha-modal">×</button>
+      </div>
+
+      <div class="abha-card-block" style="margin-bottom:20px;">
+        <div class="abha-card-top">
+          <span class="abha-gov-label">Government of India · NHA</span>
+          <span class="badge-verified">ACTIVE & LINKED</span>
+        </div>
+        <div class="abha-qr-row">
+          <div class="abha-qr">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+              <rect x="0" y="0" width="30" height="30" fill="#000"/>
+              <rect x="5" y="5" width="20" height="20" fill="#fff"/>
+              <rect x="10" y="10" width="10" height="10" fill="#000"/>
+              <rect x="70" y="0" width="30" height="30" fill="#000"/>
+              <rect x="75" y="5" width="20" height="20" fill="#fff"/>
+              <rect x="80" y="10" width="10" height="10" fill="#000"/>
+              <rect x="0" y="70" width="30" height="30" fill="#000"/>
+              <rect x="5" y="75" width="20" height="20" fill="#fff"/>
+              <rect x="10" y="80" width="10" height="10" fill="#000"/>
+              <rect x="40" y="10" width="10" height="20" fill="#000"/>
+              <rect x="45" y="45" width="20" height="20" fill="#000"/>
+            </svg>
+          </div>
+          <div class="abha-details">
+            <h3>Rajesh Kumar Sharma</h3>
+            <div class="abha-number" id="modal-abha-number">14-8921-4350-9812</div>
+            <div class="abha-address" id="modal-abha-address">rajesh.sharma@abdm</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-outline" id="btn-generate-new-abha-modal">🔄 Generate New</button>
+        <button class="btn-primary" onclick="document.getElementById('abha-modal').classList.remove('active')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: ABDM CONSENT SIMULATOR                           -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="consent-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🤝 ABDM Consent Handshake</h3>
+        <button class="modal-close" onclick="document.getElementById('consent-modal').classList.remove('active')">×</button>
+      </div>
+      <p class="modal-sub">Simulates the ABDM consent-driven health data exchange (Milestone 2).</p>
+
+      <div class="consent-stepper">
+        <div class="step-node done" id="step-node-1"><div class="step-circle">1</div><div class="step-label">HIP Request</div></div>
+        <div class="step-connector"></div>
+        <div class="step-node active" id="step-node-2"><div class="step-circle">2</div><div class="step-label">Patient OTP</div></div>
+        <div class="step-connector"></div>
+        <div class="step-node" id="step-node-3"><div class="step-circle">3</div><div class="step-label">FHIR Decrypt</div></div>
+      </div>
+
+      <div class="consent-details">
+        <div class="consent-row"><span>Requesting Entity</span><strong>Apollo Hospitals OPD</strong></div>
+        <div class="consent-row"><span>Purpose</span><span>Care Management & Chronic Disease Monitoring</span></div>
+        <div class="consent-row"><span>Patient ABHA</span><span class="mono">14-8921-4350-9812</span></div>
+        <div class="consent-row"><span>Access</span><span>Diagnostic Reports & Prescriptions (30 days)</span></div>
+      </div>
+
+      <div id="consent-result-box" style="display:none;"></div>
+
+      <div class="modal-actions">
+        <button class="btn-outline" onclick="document.getElementById('consent-modal').classList.remove('active')">Cancel</button>
+        <button class="btn-primary" id="btn-approve-consent" onclick="AbdmManager.approveConsentHandshake()">🔐 Grant Consent</button>
+      </div>
+    </div>
+  <!-- ======================================================= -->
+  <!-- MODAL: REGISTER NEW PATIENT                             -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="add-patient-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>👤 Register New Patient</h3>
+        <button class="modal-close" onclick="document.getElementById('add-patient-modal').classList.remove('active')">×</button>
+      </div>
+      <p class="modal-sub">Creates an independent patient health record with an auto-generated ABDM/ABHA digital identity.</p>
+
+      <form id="form-add-patient" onsubmit="event.preventDefault(); App.handleCreatePatient();">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="pat-form-name" class="form-input" placeholder="e.g. Priya Sharma" required>
+        </div>
+
+        <div class="form-grid-3">
+          <div class="form-group">
+            <label class="form-label">Age *</label>
+            <input type="number" id="pat-form-age" class="form-input" placeholder="42" min="1" max="120" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gender *</label>
+            <select id="pat-form-gender" class="form-select" required>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Blood Group *</label>
+            <select id="pat-form-blood" class="form-select" required>
+              <option value="B+ Positive">B+</option>
+              <option value="O+ Positive">O+</option>
+              <option value="A+ Positive">A+</option>
+              <option value="AB+ Positive">AB+</option>
+              <option value="B- Negative">B-</option>
+              <option value="O- Negative">O-</option>
+              <option value="A- Negative">A-</option>
+              <option value="AB- Negative">AB-</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mobile Number (Optional)</label>
+          <input type="tel" id="pat-form-phone" class="form-input" placeholder="+91 98765 43210">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Primary Health Conditions / Notes (Optional)</label>
+          <input type="text" id="pat-form-conditions" class="form-input" placeholder="e.g. Hypothyroidism, Asthma, Hypertension">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" onclick="document.getElementById('add-patient-modal').classList.remove('active')">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-submit-new-patient">➕ Register & Generate ABHA</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: MANUAL HEALTH RECORD ENTRY                       -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="manual-record-modal">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3>✍️ Enter Medical Record Manually</h3>
+        <button class="modal-close" onclick="document.getElementById('manual-record-modal').classList.remove('active')">×</button>
+      </div>
+      <p class="modal-sub">Directly input lab biomarker numbers or paste doctor's prescription text for real-time clinical analysis.</p>
+
+      <form id="form-manual-record" onsubmit="event.preventDefault(); App.handleManualRecordSubmit();">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Record Title *</label>
+            <input type="text" id="man-rec-title" class="form-input" placeholder="e.g. Metabolic Blood Test" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Record Type *</label>
+            <select id="man-rec-type" class="form-select" required>
+              <option value="lab_report">Diagnostic Lab Report</option>
+              <option value="prescription">Doctor Prescription</option>
+              <option value="discharge_summary">Hospital Discharge Summary</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Provider / Clinic</label>
+            <input type="text" id="man-rec-provider" class="form-input" placeholder="e.g. Apollo Diagnostics">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Test</label>
+            <input type="date" id="man-rec-date" class="form-input">
+          </div>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="tabs-nav">
+          <button type="button" class="tab-btn active" id="tab-btn-values" onclick="App.switchManualTab('values')">📊 Enter Lab Values</button>
+          <button type="button" class="tab-btn" id="tab-btn-text" onclick="App.switchManualTab('text')">📝 Paste Prescription / Notes</button>
+        </div>
+
+        <!-- Tab 1: Lab Values Grid -->
+        <div id="tab-pane-values" class="tab-pane active">
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Fasting Sugar (mg/dL)</label>
+              <input type="number" step="0.1" id="val-fbs" class="form-input" placeholder="e.g. 110">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Post-Meal Sugar (mg/dL)</label>
+              <input type="number" step="0.1" id="val-ppbs" class="form-input" placeholder="e.g. 165">
+            </div>
+            <div class="form-group">
+              <label class="form-label">HbA1c (%)</label>
+              <input type="number" step="0.1" id="val-hba1c" class="form-input" placeholder="e.g. 6.8">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">BP Systolic (mmHg)</label>
+              <input type="number" id="val-systolic" class="form-input" placeholder="e.g. 132">
+            </div>
+            <div class="form-group">
+              <label class="form-label">BP Diastolic (mmHg)</label>
+              <input type="number" id="val-diastolic" class="form-input" placeholder="e.g. 86">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Serum Creatinine (mg/dL)</label>
+              <input type="number" step="0.01" id="val-creatinine" class="form-input" placeholder="e.g. 1.05">
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Total Cholesterol (mg/dL)</label>
+              <input type="number" id="val-cholesterol" class="form-input" placeholder="e.g. 210">
+            </div>
+            <div class="form-group">
+              <label class="form-label">LDL Bad Cholesterol (mg/dL)</label>
+              <input type="number" id="val-ldl" class="form-input" placeholder="e.g. 135">
+            </div>
+            <div class="form-group">
+              <label class="form-label">TSH Thyroid (uIU/mL)</label>
+              <input type="number" step="0.01" id="val-tsh" class="form-input" placeholder="e.g. 4.2">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Textarea for Prescription or Doctor Notes -->
+        <div id="tab-pane-text" class="tab-pane">
+          <div class="form-group">
+            <label class="form-label">Doctor's Prescription or Clinical Text</label>
+            <textarea id="man-rec-raw-text" class="form-textarea" rows="6" placeholder="Paste or type doctor prescription text, medicines, dosage (e.g. Tab Metformin 500mg twice daily with meals, Tab Telmisartan 40mg once daily in morning)..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" onclick="document.getElementById('manual-record-modal').classList.remove('active')">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-submit-manual-record">🔬 Analyze & Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: AI ENGINE & GOOGLE GEMINI SETTINGS               -->
+  <!-- ======================================================= -->
+  <div class="modal-overlay" id="ai-settings-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⚡ AI Engine & Google Gemini Settings</h3>
+        <button class="modal-close" onclick="document.getElementById('ai-settings-modal').classList.remove('active')">×</button>
+      </div>
+      <p class="modal-sub">Connect Google Gemini API for real-time generative clinical intelligence, OCR understanding, and multilingual copilot reasoning.</p>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border-med);border-radius:var(--r-md);padding:14px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:0.75rem;color:var(--text-3);text-transform:uppercase;font-weight:700;">Active AI Engine</span>
+          <span class="badge badge-success" id="ai-engine-status-badge">Built-in Clinical NLP Active</span>
+        </div>
+        <div style="font-size:0.85rem;font-weight:600;color:var(--text-1);" id="ai-engine-model-label">Nirogya Rule-Based Clinical Engine</div>
+        <p style="font-size:0.74rem;color:var(--text-2);margin-top:4px;">When no API key is provided, the system seamlessly operates offline with zero downtime.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Google Gemini API Key</label>
+        <input type="password" id="gemini-key-input" class="form-input" placeholder="AIzaSy...">
+        <div style="font-size:0.72rem;color:var(--text-3);margin-top:5px;">
+          Don't have a key? Get a free API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--emerald);text-decoration:underline;">Google AI Studio</a>.
+        </div>
+      </div>
+
+      <div id="gemini-test-result" style="display:none;margin-bottom:14px;padding:10px;border-radius:var(--r-md);font-size:0.78rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="btn-clear-gemini-key" onclick="App.clearGeminiKey()">Clear Key</button>
+        <button type="button" class="btn-primary" id="btn-save-gemini-key" onclick="App.saveGeminiKey()">💾 Save & Test Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js?v=2.3"></script>
+  <script src="js/i18n.js?v=2.3"></script>
+  <script src="js/timeline.js?v=2.3"></script>
+  <script src="js/copilot.js?v=2.3"></script>
+  <script src="js/abdm_modal.js?v=2.3"></script>
+  <script src="js/app.js?v=2.3"></script>
+</body>
+</html>
